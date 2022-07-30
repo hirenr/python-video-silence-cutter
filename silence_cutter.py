@@ -58,6 +58,17 @@ def ffmpeg_filter_getSegmentFilter(videoSectionTimings):
   ret = ret[:-1]
   return ret
 
+# def ffmpeg_filter_getSegmentArray(videoSectionTimings):
+#   ret = ""
+#   for i in range (int (len(videoSectionTimings)/2)):
+#     start = videoSectionTimings[2*i]
+#     end   = videoSectionTimings[2*i+1]
+#     ret += "between(t," + str(start) + "," + str(end) + ")+"
+#   # cut away last "+"
+#   ret = ret[:-1]
+#   return ret
+
+
 def getFileContent_videoFilter(videoSectionTimings):
   ret = "select='"
   ret += ffmpeg_filter_getSegmentFilter (videoSectionTimings)
@@ -94,23 +105,46 @@ def ffmpeg_run (file, videoFilter, audioFilter, outfile):
   vFile.close()
   aFile.close()
 
+def cutSegments(file, videoSectionTimings, outfile):
+  for i in range (int (len(videoSectionTimings)/2)):
+    start = videoSectionTimings[2*i]
+    to   = videoSectionTimings[2*i+1]
+    if(to - start > 0.5):
+      print(start,to)
+      ffmpeg_cut (file, start, to, outfile,i)
+
+    
 
 
-def cut_silences(infile, outfile, dB = -35):
+def ffmpeg_cut (file, start, to, outfile,index):
+  print("Creating segment: ",str(start),":",str(to))
+  command = ["ffmpeg", "-i", file, "-ss",str(start),"-to",str(to),"-acodec","copy","-vcodec","copy","Clip"+str(index)+"_"+str(start)+"_"+str(to)+"_"+outfile]
+  subprocess.run (command)
+
+def cut_silences(infile, outfile, dB = -35, split = "False"):
   print ("detecting silences")
   silences = findSilences (infile,dB)
   duration = getVideoDuration (infile)
   videoSegments = getSectionsOfNewVideo (silences, duration)
 
-  videoFilter = getFileContent_videoFilter (videoSegments)
-  audioFilter = getFileContent_audioFilter (videoSegments)
 
-  print ("create new video")
-  ffmpeg_run (infile, videoFilter, audioFilter, outfile)
+  if(split == "False"):
+    videoFilter = getFileContent_videoFilter (videoSegments)
+    audioFilter = getFileContent_audioFilter (videoSegments)
+    print ("removing silences")
+    ffmpeg_run (infile, videoFilter, audioFilter, outfile)
+    return
+  if(split == "True"):
+    print("splitting at silences")
+    cutSegments(infile,videoSegments,outfile)
+    return
+  print ("doing nothing")
+
+
 
 def printHelp():
   print ("Usage:")
-  print ("   silence_cutter.py [infile] [optional: outfile] [optional: dB]")
+  print ("   silence_cutter.py [infile] [split] [optional: outfile] [optional: dB]")
   print ("   ")
   print ("        [outfile]")
   print ("         Default: [infile]_cut")
@@ -125,6 +159,9 @@ def printHelp():
   print ("         -50: Cuts are almost not recognizable.")
   print ("              Cuts nothing, if there is background noise.")
   print ("         ")
+  print ("   ")
+  print ("        [split]")
+  print ("         Default: False")
   print ("")
   print ("Dependencies:")
   print ("          ffmpeg")
@@ -150,15 +187,18 @@ def main():
   tmp = os.path.splitext (infile)
   outfile = tmp[0] + "_cut" + tmp[1]
   dB = -30
+  split = False
 
   if (len(args) >= 2):
-    outfile = args[1]
+    split = args[1]
 
   if (len(args) >= 3):
-    dB = args[2]
+    outfile = args[2]
 
+  if (len(args) >= 4):
+    dB = args[3]
 
-  cut_silences (infile, outfile, dB)
+  cut_silences (infile, outfile, dB, split)
 
 
 if __name__ == "__main__":
