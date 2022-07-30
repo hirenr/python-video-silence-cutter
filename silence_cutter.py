@@ -5,7 +5,7 @@ import tempfile
 import sys
 import os
 
-def findSilences(filename, dB = -35):
+def findSilences(filename, dB = -35, duration = 1):
   """
     returns a list:
       even elements (0,2,4, ...) denote silence start time
@@ -13,7 +13,7 @@ def findSilences(filename, dB = -35):
 
   """
   command = ["ffmpeg","-i",filename,
-             "-af","silencedetect=n=" + str (dB) + "dB:d=0.5",
+             "-af","silencedetect=n=" + str (dB) + "dB:d="+str(duration),
              "-f","null","-"]
   output = subprocess.run (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   s = str(output)
@@ -127,9 +127,9 @@ def ffmpeg_cut (file, start, to,index):
   print(command)
   subprocess.run (command)
 
-def cut_silences(infile, outfile, dB = -35, split = "False"):
+def cut_silences(infile, outfile, dB = -35, split = "False", duration = 1):
   print ("detecting silences")
-  silences = findSilences (infile,dB)
+  silences = findSilences (infile,dB,duration)
   duration = getVideoDuration (infile)
   videoSegments = getSectionsOfNewVideo (silences, duration)
 
@@ -150,11 +150,15 @@ def cut_silences(infile, outfile, dB = -35, split = "False"):
 
 def printHelp():
   print ("Usage:")
-  print ("   silence_cutter.py [infile] [split] [optional: outfile] [optional: dB]")
+  print ("   silence_cutter.py [infile] [optional:split] [optional: outfile] [optional: dB] [optional: duration]")
   print ("   ")
   print ("        [outfile]")
   print ("         Default: [infile]_cut")
   print ("   ")
+  print ("        [duration]")
+  print ("         Default: 1")
+  print ("         Check https://ffmpeg.org/ffmpeg-utils.html#time-duration-syntax for examples")
+  print ("         ")
   print ("        [dB]")
   print ("         Default: -30")
   print ("         A suitable value might be around -50 to -35.")
@@ -194,6 +198,7 @@ def main():
   outfile = tmp[0] + "_cut" + tmp[1]
   dB = -30
   split = False
+  duration = 1
 
   if (len(args) >= 2):
     split = args[1]
@@ -204,7 +209,10 @@ def main():
   if (len(args) >= 4):
     dB = args[3]
 
-  cut_silences (infile, outfile, dB, split)
+  if (len(args) >= 5):
+    duration = args[4]
+
+  cut_silences (infile, outfile, dB, split,duration)
 
 
 if __name__ == "__main__":
