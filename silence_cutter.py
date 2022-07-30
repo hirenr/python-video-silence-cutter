@@ -41,6 +41,7 @@ def getVideoDuration(filename:str) -> float:
 
   output = subprocess.run (command, stdout=subprocess.PIPE)
   s = str(output.stdout, "UTF-8")
+  print("duration: ",s)
   return float (s)
 
 def getSectionsOfNewVideo (silences, duration):
@@ -150,10 +151,7 @@ def cut_silences(infile, outfile, dB = -35, split = "False", duration = 1):
 
 def printHelp():
   print ("Usage:")
-  print ("   silence_cutter.py [infile] [optional:split] [optional: outfile] [optional: dB] [optional: duration]")
-  print ("   ")
-  print ("        [outfile]")
-  print ("         Default: [infile]_cut")
+  print ("   silence_cutter.py [infile] [optional: split] [optional: dB] [optional: duration]")
   print ("   ")
   print ("        [duration]")
   print ("         Default: 1")
@@ -204,13 +202,10 @@ def main():
     split = args[1]
 
   if (len(args) >= 3):
-    outfile = args[2]
+    dB = args[2]
 
   if (len(args) >= 4):
-    dB = args[3]
-
-  if (len(args) >= 5):
-    duration = args[4]
+    duration = args[3]
 
   cut_silences (infile, outfile, dB, split,duration)
 
