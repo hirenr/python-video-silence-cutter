@@ -13,7 +13,7 @@ def findSilences(filename, dB = -35):
 
   """
   command = ["ffmpeg","-i",filename,
-             "-af","silencedetect=n=" + str (dB) + "dB:d=1",
+             "-af","silencedetect=n=" + str (dB) + "dB:d=0.5",
              "-f","null","-"]
   output = subprocess.run (command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   s = str(output)
@@ -123,7 +123,7 @@ def ffmpeg_cut (file, start, to,index):
     path = tmp[0]+"/"
   else:
     path = tmp[0]
-  command = ["ffmpeg", "-i", file, "-ss",str(start),"-to",str(to),"-acodec","copy","-vcodec","copy",path+"Clip"+str(index)+"_"+str(start)+"_"+str(to)+"_"+tmp[1]]
+  command = ["ffmpeg", "-i", file, "-ss",str(start),"-to",str(to),"-acodec","copy","-vcodec","copy",path+"Clip"+str(index)+"_"+tmp[1]]
   print(command)
   subprocess.run (command)
 
