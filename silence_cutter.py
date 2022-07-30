@@ -118,10 +118,10 @@ def cutSegments(file, videoSectionTimings):
 
 def ffmpeg_cut (file, start, to,index):
   print("Creating segment: ",str(start),":",str(to))
-  tmp = os.path.splitext (file)
+  tmp = os.path.split (file)
   print(tmp)
   # outfile = tmp[0] + "_cut" + tmp[1]
-  command = ["ffmpeg", "-i", file, "-ss",str(start),"-to",str(to),"-acodec","copy","-vcodec","copy","Clip"+str(index)+"_"+str(start)+"_"+str(to)+tmp[1]]
+  command = ["ffmpeg", "-i", file, "-ss",str(start),"-to",str(to),"-acodec","copy","-vcodec","copy","Clip"+str(index)+"_"+str(start)+"_"+str(to)+"_"+tmp[1]]
   print(command)
   # subprocess.run (command)
 
